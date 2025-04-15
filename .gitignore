@@ -1,0 +1,16 @@
+# Node/Bun
+node_modules
+bun.lockb
+
+# Go
+/backend/bin/
+/backend/*.exe
+/backend/*.out
+
+# IDEs
+.vscode
+.idea
+
+# Outros
+.env
+.DS_Store
