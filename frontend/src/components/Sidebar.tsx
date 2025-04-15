@@ -21,8 +21,22 @@ const Sidebar = () => (
         >
           Alvos
         </NavLink>
-        <a href="#">Varreduras</a>
-        <a href="#">Resultados</a>
+        <NavLink
+          to="/varreduras"
+          className={({ isActive }) =>
+            isActive ? "text-blue-400" : "hover:text-blue-400"
+          }
+        >
+          Varreduras
+        </NavLink>
+        <NavLink
+          to="/resultados"
+          className={({ isActive }) =>
+            isActive ? "text-blue-400" : "hover:text-blue-400"
+          }
+        >
+          Resultados
+        </NavLink>
         <a href="#">Sobre</a>
       </nav>
     </div>

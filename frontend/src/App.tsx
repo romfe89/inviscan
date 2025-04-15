@@ -2,6 +2,8 @@ import Sidebar from "./components/Sidebar";
 import { Routes, Route } from "react-router-dom";
 import DashboardPage from "./pages/DashboardPage";
 import TargetsPage from "./pages/TargetsPage";
+import ScanPage from "./pages/ScanPage";
+import ResultsPage from "./pages/ResultsPage";
 
 function App() {
   return (
@@ -11,6 +13,8 @@ function App() {
         <Routes>
           <Route path="/" element={<DashboardPage />} />
           <Route path="/alvos" element={<TargetsPage />} />
+          <Route path="/varreduras" element={<ScanPage />} />
+          <Route path="/resultados" element={<ResultsPage />} />
         </Routes>
       </main>
     </div>

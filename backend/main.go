@@ -1,25 +1,17 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+
+	"github.com/romfe89/inviscan/backend/handlers"
 )
 
-type PingResponse struct {
-	Message string `json:"message"`
-}
-
-func pingHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Content-Type", "application/json")
-
-	json.NewEncoder(w).Encode(PingResponse{Message: "Online"})
-}
-
 func main() {
-	http.HandleFunc("/api/ping", pingHandler)
+	http.HandleFunc("/api/ping", handlers.PingHandler)
+	http.HandleFunc("/api/scan", handlers.ScanHandler)
+	http.HandleFunc("/api/results", handlers.ResultsHandler)	
 
 	port := "8080"
 	fmt.Printf("Servidor backend rodando em http://localhost:%s\n", port)
