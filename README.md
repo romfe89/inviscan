@@ -26,10 +26,7 @@ Sistema de varredura e reconhecimento de superfície de ataque com frontend em R
 ### 📦 Ferramentas Go (instalar com um único comando)
 
 ```bash
-go install github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest \
-    github.com/tomnomnom/assetfinder@latest \
-    github.com/tomnomnom/httprobe@latest \
-    github.com/sensepost/gowitness@latest
+go install github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest ;go install github.com/tomnomnom/assetfinder@latest ;go install github.com/tomnomnom/httprobe@latest ;go install github.com/sensepost/gowitness@latest
 ```
 
 E adicione ao PATH:
