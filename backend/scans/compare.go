@@ -7,12 +7,15 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"github.com/romfe89/inviscan/backend/utils"
 )
 
 func CompareWithPrevious(domain string, current []string) error {
 	dir := "resultados"
 	entries, err := os.ReadDir(dir)
 	if err != nil {
+		utils.LogError(fmt.Sprintf("Erro ao ler diretório de resultados: %v", err))
 		return fmt.Errorf("erro ao ler diretório de resultados: %v", err)
 	}
 
@@ -24,19 +27,20 @@ func CompareWithPrevious(domain string, current []string) error {
 	}
 
 	if lastScan == "" {
-		fmt.Println("[!] Nenhum scan anterior encontrado para comparação.")
+		utils.LogWarn("Nenhum scan anterior encontrado para comparação.")
 		return nil
 	}
 
 	lastSubFile := filepath.Join(dir, lastScan, "subdomains.txt")
 	lastSubs, err := readLines(lastSubFile)
 	if err != nil {
-		fmt.Printf("[!] Erro ao ler último subdomains.txt: %v\n", err)
+		utils.LogWarn(fmt.Sprintf("Erro ao ler último subdomains.txt: %v", err))
 		return nil
 	}
 
 	newSubs := diffSorted(lastSubs, current)
-	fmt.Printf("[+] Novos subdomínios desde %s: %d\n", lastScan, len(newSubs))
+	utils.LogSuccess(fmt.Sprintf("Novos subdomínios desde %s: %d", lastScan, len(newSubs)))
+
 	for _, s := range newSubs {
 		fmt.Println("  +", s)
 	}
@@ -63,7 +67,6 @@ func readLines(path string) ([]string, error) {
 }
 
 func diffSorted(old, current []string) []string {
-	// Garantir ordenação
 	sort.Strings(old)
 	sort.Strings(current)
 

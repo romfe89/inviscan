@@ -31,9 +31,15 @@ const ScanPage = () => {
       const data = await response.json();
       setMessage(data.message);
     } catch (error) {
-      setMessage(`Erro ao iniciar a varredura: ${error}`);
+      setMessage("Erro ao iniciar a varredura. " + error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      handleScan();
     }
   };
 
@@ -42,12 +48,14 @@ const ScanPage = () => {
       <Header />
       <section className="bg-white shadow rounded-lg p-6">
         <h3 className="text-lg font-semibold mb-4">Nova Varredura</h3>
-        <div className="flex gap-4">
+        <div className="flex gap-4 items-center">
           <input
             type="text"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
+            onKeyDown={handleKeyDown}
             placeholder="Digite a URL do alvo..."
+            disabled={loading}
             className="flex-1 px-4 py-2 border border-zinc-300 rounded-md"
           />
           <button
@@ -59,6 +67,9 @@ const ScanPage = () => {
           >
             {loading ? "Escaneando..." : "Escanear"}
           </button>
+          {loading && (
+            <div className="ml-2 animate-spin border-2 border-t-transparent border-zinc-400 rounded-full h-5 w-5"></div>
+          )}
         </div>
         {message && <p className="mt-4 text-sm text-zinc-600">{message}</p>}
       </section>

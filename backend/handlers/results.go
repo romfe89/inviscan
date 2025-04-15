@@ -8,23 +8,28 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"github.com/romfe89/inviscan/backend/utils"
 )
 
 type ScanResult struct {
-	Domain        string   `json:"domain"`
-	Timestamp     string   `json:"timestamp"`
-	Subdomains    int      `json:"subdomains"`
-	ActiveSites   int      `json:"activeSites"`
-	JuicyTargets  int      `json:"juicyTargets"`
-	Path          string   `json:"path"`
+	Domain        string `json:"domain"`
+	Timestamp     string `json:"timestamp"`
+	Subdomains    int    `json:"subdomains"`
+	ActiveSites   int    `json:"activeSites"`
+	JuicyTargets  int    `json:"juicyTargets"`
+	Path          string `json:"path"`
 }
 
 func ResultsHandler(w http.ResponseWriter, r *http.Request) {
+	utils.LogInfo("Recebida requisição para /api/results")
+
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Content-Type", "application/json")
 
 	dirs, err := os.ReadDir("resultados")
 	if err != nil {
+		utils.LogError(fmt.Sprintf("Erro ao ler diretórios de resultados: %v", err))
 		http.Error(w, fmt.Sprintf("Erro ao ler diretórios: %v", err), 500)
 		return
 	}
@@ -61,12 +66,14 @@ func ResultsHandler(w http.ResponseWriter, r *http.Request) {
 		return results[i].Timestamp > results[j].Timestamp
 	})
 
+	utils.LogSuccess(fmt.Sprintf("Resultados retornados: %d entradas", len(results)))
 	json.NewEncoder(w).Encode(results)
 }
 
 func countLines(path string) int {
 	f, err := os.ReadFile(path)
 	if err != nil {
+		utils.LogWarn(fmt.Sprintf("Arquivo não encontrado ou erro ao ler: %s", path))
 		return 0
 	}
 	return len(strings.Split(strings.TrimSpace(string(f)), "\n"))

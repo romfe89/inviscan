@@ -6,33 +6,36 @@ import (
 	"fmt"
 	"os/exec"
 	"strings"
+
+	"github.com/romfe89/inviscan/backend/utils"
 )
 
 func EnumerateSubdomains(domain string) ([]string, error) {
 	var results []string
 
-	fmt.Println("[+] Enumerando subdomínios com subfinder...")
-	subfinderOut, err := runTool("subfinder", "-d", domain)
-	if err != nil {
-		return nil, fmt.Errorf("erro no subfinder: %v", err)
+	utils.LogInfo("Enumerando subdomínios com subfinder...")
+	if subfinderOut, err := runTool("subfinder", "-d", domain); err != nil {
+		utils.LogWarn(fmt.Sprintf("Falha no subfinder: %v", err))
+	} else {
+		results = append(results, subfinderOut...)
 	}
-	results = append(results, subfinderOut...)
 
-	fmt.Println("[+] Enumerando subdomínios com assetfinder...")
-	assetfinderOut, err := runTool("assetfinder", "--subs-only", domain)
-	if err != nil {
-		return nil, fmt.Errorf("erro no assetfinder: %v", err)
+	utils.LogInfo("Enumerando subdomínios com assetfinder...")
+	if assetfinderOut, err := runTool("assetfinder", "--subs-only", domain); err != nil {
+		utils.LogWarn(fmt.Sprintf("Falha no assetfinder: %v", err))
+	} else {
+		results = append(results, assetfinderOut...)
 	}
-	results = append(results, assetfinderOut...)
 
-	fmt.Println("[+] Buscando subdomínios via crt.sh...")
-	crtshOut, err := queryCRTSh(domain)
-	if err != nil {
-		return nil, fmt.Errorf("erro no crt.sh: %v", err)
+	utils.LogInfo("Buscando subdomínios via crt.sh...")
+	if crtshOut, err := queryCRTSh(domain); err != nil {
+		utils.LogWarn(fmt.Sprintf("Falha no crt.sh: %v", err))
+	} else {
+		results = append(results, crtshOut...)
 	}
-	results = append(results, crtshOut...)
 
 	unique := removeDuplicates(results)
+	utils.LogSuccess(fmt.Sprintf("Total de subdomínios encontrados: %d", len(unique)))
 	return unique, nil
 }
 
@@ -52,7 +55,6 @@ func queryCRTSh(domain string) ([]string, error) {
 	jq := exec.Command("jq", "-r", ".[].name_value")
 	sed := exec.Command("sed", "s/\\*\\.//g")
 
-	// encadeia comandos curl | jq | sed
 	curlOut, err := cmd.Output()
 	if err != nil {
 		return nil, err
