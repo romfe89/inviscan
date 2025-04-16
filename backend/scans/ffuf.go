@@ -28,8 +28,8 @@ func RunFFUF(domain string, outputDir string) ([]string, error) {
 	}
 
 	outputFile := filepath.Join(outputDir, "ffuf.json")
-
 	baseDomain := strings.TrimPrefix(domain, "www.")
+
 	cmd := exec.Command("ffuf",
 		"-u", fmt.Sprintf("http://FUZZ.%s", baseDomain),
 		"-w", wordlist,
@@ -42,24 +42,19 @@ func RunFFUF(domain string, outputDir string) ([]string, error) {
 	utils.LogInfo("Comando que será executado:")
 	utils.LogInfo(strings.Join(cmd.Args, " "))
 
-	cmd.Env = os.Environ()
-
 	if err := cmd.Run(); err != nil {
 		utils.LogWarn(fmt.Sprintf("ffuf falhou: %v", err))
 		return nil, nil
 	}
-
-	utils.LogInfo(fmt.Sprintf("Tentando ler resultados em: %s", outputFile))
 
 	data, err := os.ReadFile(outputFile)
 	if err != nil {
 		utils.LogWarn(fmt.Sprintf("Erro ao ler %s: %v", outputFile, err))
 		return nil, nil
 	}
-
-	utils.LogInfo(fmt.Sprintf("Arquivo JSON tem %d bytes", len(data)))
-	if len(data) < 100 {
-		utils.LogWarn(fmt.Sprintf("Conteúdo do ffuf.json parece pequeno demais:\n%s", string(data)))
+	if len(data) == 0 {
+		utils.LogWarn("ffuf não retornou resultados.")
+		return nil, nil
 	}
 
 	var parsed ffufResult
@@ -73,7 +68,7 @@ func RunFFUF(domain string, outputDir string) ([]string, error) {
 		if r.Host != "" {
 			found = append(found, r.Host)
 		} else if sub, ok := r.Input["FUZZ"]; ok {
-			found = append(found, fmt.Sprintf("%s.%s", sub, domain))
+			found = append(found, fmt.Sprintf("%s.%s", sub, baseDomain))
 		}
 	}
 

@@ -3,8 +3,7 @@ package scans
 import (
 	"fmt"
 	"os"
-	"path/filepath"
-	"time"
+	"strings"
 
 	"github.com/romfe89/inviscan/backend/utils"
 )
@@ -12,51 +11,42 @@ import (
 func RunFullScan(domain string) error {
 	utils.LogInfo(fmt.Sprintf("Iniciando scan para: %s", domain))
 
-	// Cria diretório de saída
-	timestamp := time.Now().Format("20060102_150405")
-	outputDir := filepath.Join("resultados", fmt.Sprintf("%s_%s", domain, timestamp))
-	if err := os.MkdirAll(outputDir, 0755); err != nil {
-		utils.LogError(fmt.Sprintf("Erro ao criar diretório de saída: %v", err))
-		return err
-	}
+	baseDomain := strings.TrimPrefix(domain, "www.")
+	utils.LogInfo(fmt.Sprintf("Domínio base utilizado: %s", baseDomain))
 
-	// Executa etapas
-	subdomains, err := EnumerateSubdomains(domain, outputDir)
+	outputDir := fmt.Sprintf("backend/resultados/%s_%s", domain, utils.Timestamp())
+	os.MkdirAll(outputDir, 0755)
+
+	subdomains, err := EnumerateSubdomains(baseDomain)
 	if err != nil {
-		utils.LogError(fmt.Sprintf("Erro na enumeração: %v", err))
 		return err
 	}
-	
-	if ffufOut, err := RunFFUF(domain, outputDir); err == nil {
+	utils.LogSuccess(fmt.Sprintf("Total de subdomínios encontrados: %d", len(subdomains)))
+
+	if ffufOut, err := RunFFUF(baseDomain, outputDir); err == nil {
 		subdomains = append(subdomains, ffufOut...)
 		subdomains = removeDuplicates(subdomains)
+		utils.LogSuccess(fmt.Sprintf("Subdomínios encontrados: %d", len(subdomains)))
 	}
-	
-	utils.LogSuccess(fmt.Sprintf("Subdomínios encontrados: %d", len(subdomains)))
 
 	active, err := ProbeActiveSites(subdomains, outputDir)
 	if err != nil {
-		utils.LogError(fmt.Sprintf("Erro ao verificar sites ativos: %v", err))
-		return err
+		return fmt.Errorf("erro ao verificar sites ativos: %v", err)
 	}
 	utils.LogSuccess(fmt.Sprintf("Sites ativos encontrados: %d", len(active)))
 
 	juicy := FilterJuicyTargets(active, outputDir)
 	utils.LogSuccess(fmt.Sprintf("Juicy targets encontrados: %d", len(juicy)))
 
-	err = CaptureScreenshots(active, outputDir)
-	if err != nil {
-		utils.LogError(fmt.Sprintf("Erro ao capturar screenshots: %v", err))
-		return err
+	if err := CaptureScreenshots(active, outputDir); err != nil {
+		return fmt.Errorf("erro ao capturar screenshots: %v", err)
 	}
 
-	err = CompareWithPrevious(domain, subdomains, outputDir)
-	if err != nil {
-		utils.LogWarn(fmt.Sprintf("Erro na comparação com o scan anterior: %v", err))
+	if err := CompareWithPrevious(domain, subdomains, outputDir); err != nil {
+		return fmt.Errorf("erro na comparação: %v", err)
 	}
 
-	utils.LogSuccess(fmt.Sprintf("Scan concluído: %d subdomínios | %d ativos | %d juicy",
-		len(subdomains), len(active), len(juicy)))
-
+	utils.LogSuccess(fmt.Sprintf("Scan concluído: %d subdomínios | %d ativos | %d juicy", len(subdomains), len(active), len(juicy)))
+	utils.LogSuccess(fmt.Sprintf("Scan concluído para: %s", domain))
 	return nil
 }

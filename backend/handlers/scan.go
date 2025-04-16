@@ -48,16 +48,12 @@ func ScanHandler(w http.ResponseWriter, r *http.Request) {
 		target = parsed.Host
 	}
 
-	utils.LogInfo(fmt.Sprintf("Iniciando scan para: %s", target))
-
 	err = scans.RunFullScan(target)
 	if err != nil {
 		utils.LogError(fmt.Sprintf("Erro durante o scan de %s: %v", target, err))
 		http.Error(w, fmt.Sprintf("Erro ao executar scan: %v", err), 500)
 		return
 	}
-
-	utils.LogSuccess(fmt.Sprintf("Scan concluído para: %s", target))
 
 	resp := ScanResponse{
 		Status:  "ok",

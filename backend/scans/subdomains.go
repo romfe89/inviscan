@@ -4,52 +4,45 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 
 	"github.com/romfe89/inviscan/backend/utils"
 )
 
-func EnumerateSubdomains(domain string, outputDir string) ([]string, error) {
+func EnumerateSubdomains(domain string) ([]string, error) {
 	var results []string
+	baseDomain := strings.TrimPrefix(domain, "www.")
 
 	utils.LogInfo("Enumerando subdomínios com subfinder...")
-	if subfinderOut, err := runTool("subfinder", "-d", domain); err != nil {
+	if subfinderOut, err := runTool("subfinder", "-d", baseDomain); err != nil {
 		utils.LogWarn(fmt.Sprintf("Falha no subfinder: %v", err))
 	} else {
 		results = append(results, subfinderOut...)
 	}
 
 	utils.LogInfo("Enumerando subdomínios com assetfinder...")
-	if assetfinderOut, err := runTool("assetfinder", "--subs-only", domain); err != nil {
+	if assetfinderOut, err := runTool("assetfinder", "--subs-only", baseDomain); err != nil {
 		utils.LogWarn(fmt.Sprintf("Falha no assetfinder: %v", err))
 	} else {
 		results = append(results, assetfinderOut...)
 	}
 
 	utils.LogInfo("Buscando subdomínios via crt.sh...")
-	if crtshOut, err := queryCRTSh(domain); err != nil {
+	if crtshOut, err := queryCRTSh(baseDomain); err != nil {
 		utils.LogWarn(fmt.Sprintf("Falha no crt.sh: %v", err))
 	} else {
 		results = append(results, crtshOut...)
 	}
 
 	unique := removeDuplicates(results)
-
-	// Salvar resultado no diretório do scan
-	subFile := filepath.Join(outputDir, "subdomains.txt")
-	if err := os.WriteFile(subFile, []byte(strings.Join(unique, "\n")), 0644); err != nil {
-		utils.LogError(fmt.Sprintf("Erro ao salvar subdomains.txt: %v", err))
-	}
-
-	utils.LogSuccess(fmt.Sprintf("Total de subdomínios encontrados: %d", len(unique)))
 	return unique, nil
 }
 
 func runTool(name string, args ...string) ([]string, error) {
 	cmd := exec.Command(name, args...)
+	utils.LogInfo("Executando: " + strings.Join(cmd.Args, " "))
+
 	var stdout bytes.Buffer
 	cmd.Stdout = &stdout
 	err := cmd.Run()
@@ -60,11 +53,13 @@ func runTool(name string, args ...string) ([]string, error) {
 }
 
 func queryCRTSh(domain string) ([]string, error) {
-	cmd := exec.Command("curl", "--compressed", "-s", fmt.Sprintf("https://crt.sh/?q=%%25.%s&output=json", domain))
+	curlCmd := exec.Command("curl", "--compressed", "-s", fmt.Sprintf("https://crt.sh/?q=%%25.%s&output=json", domain))
 	jq := exec.Command("jq", "-r", ".[].name_value")
 	sed := exec.Command("sed", "s/\\*\\.//g")
 
-	curlOut, err := cmd.Output()
+	utils.LogInfo("Executando: " + strings.Join(curlCmd.Args, " "))
+
+	curlOut, err := curlCmd.Output()
 	if err != nil {
 		return nil, err
 	}
