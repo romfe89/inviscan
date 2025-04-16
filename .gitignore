@@ -6,7 +6,9 @@ bun.lockb
 /backend/bin/
 /backend/*.exe
 /backend/*.out
-
+/backend/resultados
+/backend/screenshots
+/backend/*.txt
 # IDEs
 .vscode
 .idea

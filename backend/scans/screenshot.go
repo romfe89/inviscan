@@ -35,7 +35,7 @@ func CaptureScreenshots(sites []string) error {
 
 	// Executa gowitness scan usando subcomando `file`
 	utils.LogInfo("Executando gowitness scan...")
-	cmd := exec.Command("gowitness", "scan", "file", "-f", "targets.txt", "--threads", "4")
+	cmd := exec.Command("gowitness", "scan", "file", "-f", "targets.txt", "--threads", "4", "--skip-html")
 	cmd.Dir = outputDir
 	output, err := cmd.CombinedOutput()
 	if err != nil {
