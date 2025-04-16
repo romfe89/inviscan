@@ -9,6 +9,8 @@ bun.lockb
 /backend/resultados
 /backend/screenshots
 /backend/*.txt
+*.json
+
 # IDEs
 .vscode
 .idea

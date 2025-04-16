@@ -44,7 +44,6 @@ func ProbeActiveSites(subdomains []string, outputDir string) ([]string, error) {
 		utils.LogError(fmt.Sprintf("Erro ao salvar active_sites.txt: %v", err))
 	}
 
-	utils.LogSuccess(fmt.Sprintf("Sites ativos encontrados: %d", len(active)))
 	return active, nil
 }
 

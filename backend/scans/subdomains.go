@@ -60,7 +60,7 @@ func runTool(name string, args ...string) ([]string, error) {
 }
 
 func queryCRTSh(domain string) ([]string, error) {
-	cmd := exec.Command("curl", "-s", fmt.Sprintf("https://crt.sh/?q=%%25.%s&output=json", domain))
+	cmd := exec.Command("curl", "--compressed", "-s", fmt.Sprintf("https://crt.sh/?q=%%25.%s&output=json", domain))
 	jq := exec.Command("jq", "-r", ".[].name_value")
 	sed := exec.Command("sed", "s/\\*\\.//g")
 
