@@ -1,36 +1,48 @@
 package scans
 
 import (
-	"bytes"
 	"fmt"
+	"os"
 	"os/exec"
+	"path/filepath"
+	"strings"
+	"time"
 
 	"github.com/romfe89/inviscan/backend/utils"
 )
 
 func CaptureScreenshots(sites []string) error {
-	utils.LogInfo("Inicializando gowitness...")
-
-	// Limpar banco de dados anterior
-	exec.Command("rm", "-f", "gowitness.sqlite3").Run()
-
-	// Inicializar novo banco de dados
-	if err := exec.Command("gowitness", "init").Run(); err != nil {
-		utils.LogError(fmt.Sprintf("Erro ao inicializar gowitness: %v", err))
-		return fmt.Errorf("erro ao inicializar gowitness: %v", err)
+	if len(sites) == 0 {
+		utils.LogWarn("Nenhum site ativo para capturar com gowitness.")
+		return nil
 	}
 
-	for _, url := range sites {
-		utils.LogInfo(fmt.Sprintf("↳ Capturando: %s", url))
-
-		cmd := exec.Command("gowitness", "scan", "single", "--url", url, "--write-db")
-		var stderr bytes.Buffer
-		cmd.Stderr = &stderr
-		if err := cmd.Run(); err != nil {
-			utils.LogWarn(fmt.Sprintf("Falha ao capturar %s: %s", url, stderr.String()))
-		}
+	// Cria pasta para capturas
+	timestamp := time.Now().Format("20060102_150405")
+	outputDir := filepath.Join("resultados", fmt.Sprintf("gowitness_%s", timestamp))
+	if err := os.MkdirAll(outputDir, 0755); err != nil {
+		utils.LogError(fmt.Sprintf("Erro ao criar diretório de capturas: %v", err))
+		return err
 	}
 
-	utils.LogSuccess("Capturas finalizadas. Use `gowitness server` para visualizar.")
+	// Escreve arquivo de alvos
+	utils.LogInfo("Preparando targets.txt para gowitness...")
+	targetsPath := filepath.Join(outputDir, "targets.txt")
+	if err := os.WriteFile(targetsPath, []byte(strings.Join(sites, "\n")), 0644); err != nil {
+		utils.LogError(fmt.Sprintf("Erro ao escrever targets.txt: %v", err))
+		return err
+	}
+
+	// Executa gowitness scan usando subcomando `file`
+	utils.LogInfo("Executando gowitness scan...")
+	cmd := exec.Command("gowitness", "scan", "file", "-f", "targets.txt", "--threads", "4")
+	cmd.Dir = outputDir
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		utils.LogWarn(fmt.Sprintf("gowitness retornou erro: %s", string(output)))
+		return fmt.Errorf("falha ao executar gowitness scan: %v", err)
+	}
+
+	utils.LogSuccess(fmt.Sprintf("Capturas salvas em: %s", outputDir))
 	return nil
 }

@@ -1,6 +1,7 @@
 package scans
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"os/exec"
@@ -10,31 +11,33 @@ import (
 )
 
 func ProbeActiveSites(subdomains []string) ([]string, error) {
-	utils.LogInfo("Verificando sites ativos com httprobe...")
+	utils.LogInfo("Verificando sites ativos com httprobe (individual)...")
 
-	cleaned := filterValidDomains(subdomains)
-	if len(cleaned) == 0 {
-		utils.LogWarn("Nenhum domínio válido para testar com httprobe.")
-		return nil, fmt.Errorf("nenhum domínio válido para testar")
+	var active []string
+	for _, sub := range filterValidDomains(subdomains) {
+		cmd := exec.Command("httprobe", "-t", "5000")
+		cmd.Stdin = strings.NewReader(sub + "\n")
+
+		var stdout, stderr bytes.Buffer
+		cmd.Stdout = &stdout
+		cmd.Stderr = &stderr
+
+		if err := cmd.Run(); err != nil {
+			utils.LogWarn(fmt.Sprintf("httprobe falhou para %s: %s", sub, stderr.String()))
+			continue
+		}
+
+		scanner := bufio.NewScanner(&stdout)
+		for scanner.Scan() {
+			line := strings.TrimSpace(scanner.Text())
+			if line != "" {
+				active = append(active, line)
+			}
+		}
 	}
 
-	cmd := exec.Command("httprobe", "-prefer-https", "-t", "2000")	
-	var stdin bytes.Buffer
-	for _, sub := range cleaned {
-		stdin.WriteString(sub + "\n")
-	}
-	cmd.Stdin = &stdin
-
-	var stdout bytes.Buffer
-	cmd.Stdout = &stdout
-
-	if err := cmd.Run(); err != nil {
-		utils.LogError(fmt.Sprintf("Erro ao executar httprobe: %v", err))
-		return nil, fmt.Errorf("erro ao executar httprobe: %v", err)
-	}
-
-	utils.LogSuccess(fmt.Sprintf("Sites ativos identificados: %d", len(parseLines(stdout.Bytes()))))
-	return parseLines(stdout.Bytes()), nil
+	utils.LogSuccess(fmt.Sprintf("Sites ativos identificados: %d", len(active)))
+	return active, nil
 }
 
 func filterValidDomains(domains []string) []string {

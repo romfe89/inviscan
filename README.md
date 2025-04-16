@@ -48,7 +48,7 @@ go run main.go
 ```bash
 cd frontend
 bun install
-bun dev
+bun run dev
 ```
 
 📂 Resultados

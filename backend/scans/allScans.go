@@ -35,7 +35,6 @@ func RunFullScan(domain string) error {
 	err = CompareWithPrevious(domain, subdomains)
 	if err != nil {
 		utils.LogWarn(fmt.Sprintf("Erro na comparação com o scan anterior: %v", err))
-		// continua mesmo assim
 	}
 
 	utils.LogSuccess(fmt.Sprintf("Scan concluído: %d subdomínios | %d ativos | %d juicy",
