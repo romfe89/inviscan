@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Header from "../components/Header";
 
-interface ScanResult {
+interface Result {
   domain: string;
   timestamp: string;
   subdomains: number;
@@ -10,47 +12,41 @@ interface ScanResult {
 }
 
 const ResultsPage = () => {
-  const [results, setResults] = useState<ScanResult[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [results, setResults] = useState<Result[]>([]);
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetch("http://localhost:8080/api/results")
       .then((res) => res.json())
       .then((data) => setResults(data))
-      .catch(() => setResults([]))
-      .finally(() => setLoading(false));
+      .catch(() => setError("Erro ao buscar resultados."));
   }, []);
 
   return (
-    <section className="bg-white shadow rounded-lg p-6">
-      <h3 className="text-lg font-semibold mb-4">Histórico de Varreduras</h3>
-      {loading ? (
-        <p className="text-sm text-zinc-500">Carregando...</p>
-      ) : (
-        <table className="w-full text-sm border border-zinc-300">
-          <thead className="bg-zinc-200">
-            <tr>
-              <th className="p-2 text-left">Domínio</th>
-              <th className="p-2 text-left">Data</th>
-              <th className="p-2 text-left">Subdomínios</th>
-              <th className="p-2 text-left">Ativos</th>
-              <th className="p-2 text-left">Juicy</th>
-            </tr>
-          </thead>
-          <tbody>
-            {results.map((res, idx) => (
-              <tr key={idx} className="hover:bg-zinc-100">
-                <td className="p-2">{res.domain}</td>
-                <td className="p-2">{res.timestamp}</td>
-                <td className="p-2">{res.subdomains}</td>
-                <td className="p-2">{res.activeSites}</td>
-                <td className="p-2">{res.juicyTargets}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-    </section>
+    <div className="flex-1">
+      <Header />
+      <section className="bg-white shadow rounded-lg p-6">
+        <h2 className="text-xl font-bold mb-4">Resultados Anteriores</h2>
+        {error && <p className="text-red-600">{error}</p>}
+        {results.length === 0 && !error && <p>Nenhum resultado encontrado.</p>}
+        <ul className="divide-y divide-zinc-200">
+          {results.map((r, i) => (
+            <li
+              key={i}
+              onClick={() => navigate(`/resultados/${r.path}`)}
+              className="p-4 cursor-pointer hover:bg-zinc-100 rounded-md"
+            >
+              <div className="font-semibold">{r.domain}</div>
+              <div className="text-sm text-zinc-600">
+                Data: {r.timestamp} | Subdomínios: {r.subdomains} | Ativos:{" "}
+                {r.activeSites} | Juicy: {r.juicyTargets}
+              </div>
+            </li>
+          ))}
+        </ul>
+      </section>
+    </div>
   );
 };
 

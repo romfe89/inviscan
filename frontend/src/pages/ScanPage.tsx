@@ -1,10 +1,12 @@
 import { useState } from "react";
 import Header from "../components/Header";
+import { useNavigate } from "react-router-dom";
 
 const ScanPage = () => {
   const [url, setUrl] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleScan = async () => {
     if (!url) {
@@ -30,6 +32,13 @@ const ScanPage = () => {
 
       const data = await response.json();
       setMessage(data.message);
+
+      const list = await fetch("http://localhost:8080/api/results");
+      const results = await list.json();
+      if (results.length > 0) {
+        const latest = results[0];
+        navigate(`/resultados/${latest.path}`);
+      }
     } catch (error) {
       setMessage("Erro ao iniciar a varredura." + error);
     } finally {
