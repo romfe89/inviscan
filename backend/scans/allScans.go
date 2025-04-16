@@ -23,8 +23,13 @@ func RunFullScan(domain string) error {
 	// Executa etapas
 	subdomains, err := EnumerateSubdomains(domain, outputDir)
 	if err != nil {
-		utils.LogError(fmt.Sprintf("Erro na enumeração de subdomínios: %v", err))
+		utils.LogError(fmt.Sprintf("Erro na enumeração: %v", err))
 		return err
+	}
+	
+	if ffufOut, err := RunFFUF(domain); err == nil {
+		subdomains = append(subdomains, ffufOut...)
+		subdomains = removeDuplicates(subdomains)
 	}
 	utils.LogSuccess(fmt.Sprintf("Subdomínios encontrados: %d", len(subdomains)))
 

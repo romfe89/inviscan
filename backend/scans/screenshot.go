@@ -42,6 +42,6 @@ func CaptureScreenshots(sites []string, outputDir string) error {
 		return fmt.Errorf("falha ao executar gowitness scan: %v", err)
 	}
 
-	utils.LogSuccess(fmt.Sprintf("Capturas salvas em: %s", gowitnessDir))
+	utils.LogSuccess(fmt.Sprintf("Capturas salvas no diretório: %s", filepath.Join(outputDir, "gowitness")))
 	return nil
 }
