@@ -27,10 +27,11 @@ func RunFullScan(domain string) error {
 		return err
 	}
 	
-	if ffufOut, err := RunFFUF(domain); err == nil {
+	if ffufOut, err := RunFFUF(domain, outputDir); err == nil {
 		subdomains = append(subdomains, ffufOut...)
 		subdomains = removeDuplicates(subdomains)
 	}
+	
 	utils.LogSuccess(fmt.Sprintf("Subdomínios encontrados: %d", len(subdomains)))
 
 	active, err := ProbeActiveSites(subdomains, outputDir)
