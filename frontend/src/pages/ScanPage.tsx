@@ -31,7 +31,7 @@ const ScanPage = () => {
       const data = await response.json();
       setMessage(data.message);
     } catch (error) {
-      setMessage("Erro ao iniciar a varredura. " + error);
+      setMessage("Erro ao iniciar a varredura." + error);
     } finally {
       setLoading(false);
     }

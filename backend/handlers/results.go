@@ -13,12 +13,12 @@ import (
 )
 
 type ScanResult struct {
-	Domain        string `json:"domain"`
-	Timestamp     string `json:"timestamp"`
-	Subdomains    int    `json:"subdomains"`
-	ActiveSites   int    `json:"activeSites"`
-	JuicyTargets  int    `json:"juicyTargets"`
-	Path          string `json:"path"`
+	Domain       string `json:"domain"`
+	Timestamp    string `json:"timestamp"`
+	Subdomains   int    `json:"subdomains"`
+	ActiveSites  int    `json:"activeSites"`
+	JuicyTargets int    `json:"juicyTargets"`
+	Path         string `json:"path"`
 }
 
 func ResultsHandler(w http.ResponseWriter, r *http.Request) {
@@ -27,26 +27,28 @@ func ResultsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Content-Type", "application/json")
 
-	dirs, err := os.ReadDir("resultados")
+	entries, err := os.ReadDir("resultados")
 	if err != nil {
-		utils.LogError(fmt.Sprintf("Erro ao ler diretórios de resultados: %v", err))
-		http.Error(w, fmt.Sprintf("Erro ao ler diretórios: %v", err), 500)
+		utils.LogError(fmt.Sprintf("Erro ao ler diretório de resultados: %v", err))
+		http.Error(w, "Erro ao ler resultados", http.StatusInternalServerError)
 		return
 	}
 
 	var results []ScanResult
-	for _, dir := range dirs {
-		if !dir.IsDir() {
+
+	for _, entry := range entries {
+		if !entry.IsDir() || strings.HasPrefix(entry.Name(), "gowitness_") {
 			continue
 		}
 
-		parts := strings.SplitN(dir.Name(), "_", 2)
+		parts := strings.SplitN(entry.Name(), "_", 2)
 		if len(parts) != 2 {
 			continue
 		}
 		domain := parts[0]
 		timestamp := parts[1]
-		base := filepath.Join("resultados", dir.Name())
+
+		base := filepath.Join("resultados", entry.Name())
 
 		subcount := countLines(filepath.Join(base, "subdomains.txt"))
 		actcount := countLines(filepath.Join(base, "active_sites.txt"))
@@ -58,7 +60,7 @@ func ResultsHandler(w http.ResponseWriter, r *http.Request) {
 			Subdomains:   subcount,
 			ActiveSites:  actcount,
 			JuicyTargets: juicount,
-			Path:         dir.Name(),
+			Path:         entry.Name(),
 		})
 	}
 
@@ -66,15 +68,14 @@ func ResultsHandler(w http.ResponseWriter, r *http.Request) {
 		return results[i].Timestamp > results[j].Timestamp
 	})
 
-	utils.LogSuccess(fmt.Sprintf("Resultados retornados: %d entradas", len(results)))
 	json.NewEncoder(w).Encode(results)
 }
 
 func countLines(path string) int {
-	f, err := os.ReadFile(path)
+	content, err := os.ReadFile(path)
 	if err != nil {
-		utils.LogWarn(fmt.Sprintf("Arquivo não encontrado ou erro ao ler: %s", path))
+		utils.LogWarn(fmt.Sprintf("Arquivo ausente ou erro: %s", path))
 		return 0
 	}
-	return len(strings.Split(strings.TrimSpace(string(f)), "\n"))
+	return len(strings.Split(strings.TrimSpace(string(content)), "\n"))
 }

@@ -4,13 +4,15 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"github.com/romfe89/inviscan/backend/utils"
 )
 
-func EnumerateSubdomains(domain string) ([]string, error) {
+func EnumerateSubdomains(domain string, outputDir string) ([]string, error) {
 	var results []string
 
 	utils.LogInfo("Enumerando subdomínios com subfinder...")
@@ -35,6 +37,13 @@ func EnumerateSubdomains(domain string) ([]string, error) {
 	}
 
 	unique := removeDuplicates(results)
+
+	// Salvar resultado no diretório do scan
+	subFile := filepath.Join(outputDir, "subdomains.txt")
+	if err := os.WriteFile(subFile, []byte(strings.Join(unique, "\n")), 0644); err != nil {
+		utils.LogError(fmt.Sprintf("Erro ao salvar subdomains.txt: %v", err))
+	}
+
 	utils.LogSuccess(fmt.Sprintf("Total de subdomínios encontrados: %d", len(unique)))
 	return unique, nil
 }
@@ -77,7 +86,7 @@ func queryCRTSh(domain string) ([]string, error) {
 
 func parseLines(data []byte) []string {
 	scanner := bufio.NewScanner(bytes.NewReader(data))
-	lines := []string{}
+	var lines []string
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 		if line != "" && !strings.Contains(line, "@") {
@@ -88,8 +97,8 @@ func parseLines(data []byte) []string {
 }
 
 func removeDuplicates(slice []string) []string {
-	seen := map[string]bool{}
-	unique := []string{}
+	seen := make(map[string]bool)
+	var unique []string
 	for _, val := range slice {
 		if !seen[val] {
 			seen[val] = true

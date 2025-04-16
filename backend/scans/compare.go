@@ -11,18 +11,21 @@ import (
 	"github.com/romfe89/inviscan/backend/utils"
 )
 
-func CompareWithPrevious(domain string, current []string) error {
+func CompareWithPrevious(domain string, current []string, outputDir string) error {
 	dir := "resultados"
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		utils.LogError(fmt.Sprintf("Erro ao ler diretório de resultados: %v", err))
-		return fmt.Errorf("erro ao ler diretório de resultados: %v", err)
+		return err
 	}
 
 	var lastScan string
 	for _, entry := range entries {
-		if entry.IsDir() && strings.HasPrefix(entry.Name(), domain+"_") {
-			lastScan = entry.Name()
+		name := entry.Name()
+		if entry.IsDir() && strings.HasPrefix(name, domain+"_") && filepath.Join(dir, name) != outputDir {
+			if lastScan == "" || name > lastScan {
+				lastScan = name
+			}
 		}
 	}
 
@@ -71,12 +74,12 @@ func diffSorted(old, current []string) []string {
 	sort.Strings(current)
 
 	diff := []string{}
-	m := map[string]bool{}
+	seen := make(map[string]bool)
 	for _, s := range old {
-		m[s] = true
+		seen[s] = true
 	}
 	for _, s := range current {
-		if !m[s] {
+		if !seen[s] {
 			diff = append(diff, s)
 		}
 	}
