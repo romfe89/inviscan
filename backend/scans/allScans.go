@@ -14,7 +14,7 @@ func RunFullScan(domain string) error {
 	baseDomain := strings.TrimPrefix(domain, "www.")
 	utils.LogInfo(fmt.Sprintf("Domínio base utilizado: %s", baseDomain))
 
-	outputDir := fmt.Sprintf("backend/resultados/%s_%s", domain, utils.Timestamp())
+	outputDir := fmt.Sprintf("resultados/%s_%s", domain, utils.Timestamp())
 	os.MkdirAll(outputDir, 0755)
 
 	subdomains, err := EnumerateSubdomains(baseDomain)
