@@ -4,6 +4,7 @@ import DashboardPage from "./pages/DashboardPage";
 import TargetsPage from "./pages/TargetsPage";
 import ScanPage from "./pages/ScanPage";
 import ResultsPage from "./pages/ResultsPage";
+import ScanResultDetails from "./pages/ScanResultDetails";
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
           <Route path="/alvos" element={<TargetsPage />} />
           <Route path="/varreduras" element={<ScanPage />} />
           <Route path="/resultados" element={<ResultsPage />} />
+          <Route path="/resultados/:path" element={<ScanResultDetails />} />
         </Routes>
       </main>
     </div>
