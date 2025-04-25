@@ -1,0 +1,31 @@
+server:
+  port: "8080"
+
+outputDirectoryBase: "resultados"
+
+wordlists:
+  ffuf: "/usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt"
+
+tools:
+  subfinder:
+    path: "subfinder"
+  assetfinder:
+    path: "assetfinder"
+  curl:
+    path: "curl"
+  jq:
+    path: "jq"
+  sed:
+    path: "sed"
+  ffuf:
+    path: "ffuf"
+    threads: 40
+    matchCodes: "200,301,302,307,403"
+  httpx:
+    path: "httpx"
+    threads: 50
+    matchCodes: "200,301,302,307"
+    timeout: 10000
+  gowitness:
+    path: "gowitness"
+    threads: 4
